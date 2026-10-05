@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String?
+  phone     String?
+  email     String
+  url       String?
+  jobId     String?  // ties the lead back to the audit job it unlocked (gate-form)
+  type      String   @default("gate") // gate | newsletter
+  createdAt DateTime @default(now())
+  audits    Audit[]
+}
+
+model Audit {
+  id          String   @id @default(cuid())
+  url         String
+  status      String   @default("queued") // queued | running | completed | failed
+  result      Json?
+  leadId      String?
+  lead        Lead?    @relation(fields: [leadId], references: [id])
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+}
+
+model Subscription {
+  id           String    @id @default(cuid())
+  name         String?
+  email        String
+  phone        String?
+  url          String?
+  plan         String    @default("Growth — up to 5 websites")
+  status       String    @default("trial") // trial | active | cancelled | expired
+  trialEndsAt  DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+model Consultation {
+  id         String    @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  url        String?
+  scoreFocus String?   // which audit category the request is about
+  budget     String?
+  message    String?
+  slot       DateTime?
+  status     String    @default("requested") // requested | scheduled | completed | cancelled
+  createdAt  DateTime  @default(now())
+}
